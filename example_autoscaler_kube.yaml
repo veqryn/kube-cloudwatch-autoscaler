@@ -18,52 +18,54 @@ spec:
         - name: kube-cloudwatch-autoscaler
           image: "veqryn/kube-cloudwatch-autoscaler:1.0"
           env:
-            - name: KUBE_ENDPOINT
+            - name: KUBE_ENDPOINT # Required
               value: "apis/apps/v1beta1/namespaces/default/deployments/my-app-name/scale"
-            - name: KUBE_MIN_REPLICAS
+            - name: KUBE_MIN_REPLICAS # Optional
               value: "1"
-            - name: KUBE_MAX_REPLICAS
+            - name: KUBE_MAX_REPLICAS # Optional
               value: "100"
-            - name: KUBE_SCALE_DOWN_COUNT
+            - name: KUBE_SCALE_DOWN_COUNT # Optional
               value: "1"
-            - name: KUBE_SCALE_UP_COUNT
+            - name: KUBE_SCALE_UP_COUNT # Optional
               value: "1"
-            - name: KUBE_SCALE_DOWN_COOLDOWN
+            - name: KUBE_SCALE_DOWN_COOLDOWN # Optional
               value: "120"
-            - name: KUBE_SCALE_UP_COOLDOWN
+            - name: KUBE_SCALE_UP_COOLDOWN # Optional
               value: "300"
-            - name: CW_SCALE_DOWN_VALUE
+            - name: CW_SCALE_DOWN_VALUE # Required
               value: "300"
-            - name: CW_SCALE_UP_VALUE
+            - name: CW_SCALE_UP_VALUE # Required
               value: "900"
-            - name: CW_NAMESPACE
+            - name: CW_NAMESPACE # Required
               value: "AWS/SQS"
-            - name: CW_METRIC_NAME
+            - name: CW_METRIC_NAME # Required
               value: "ApproximateAgeOfOldestMessage"
-            - name: CW_DIMENSIONS
+            - name: CW_DIMENSIONS # Required
               value: "Name=QueueName,Value=my_sqs_queue_name"
-            - name: CW_STATISTICS
+              # Separate multiple dimensions with spaces, such as: "Name=TargetGroup,Value=targetgroup/my-tg/abc Name=LoadBalancer,Value=app/my-elb/xyz"
+            - name: CW_STATISTICS # Optional
               value: "Average"
-            - name: CW_PERIOD
+            - name: CW_PERIOD # Optional
               value: "360"
-            - name: CW_POLL_PERIOD
+            - name: CW_POLL_PERIOD # Optional
               value: "30"
-            - name: VERBOSE
+            - name: VERBOSE # Optional
               value: "true"
-            - name: AWS_DEFAULT_REGION
+            - name: AWS_DEFAULT_REGION # Optional only if using AWS EC2 Roles
               value: "us-east-1"
-            - name: AWS_ACCESS_KEY_ID
+            - name: AWS_ACCESS_KEY_ID # Optional only if using AWS EC2 Roles
               valueFrom:
                 secretKeyRef:
                   name: aws-secrets
                   key: aws-access-key-id
-            - name: AWS_SECRET_ACCESS_KEY
+            - name: AWS_SECRET_ACCESS_KEY # Optional only if using AWS EC2 Roles
               valueFrom:
                 secretKeyRef:
                   name: aws-secrets
                   key: aws-secret-access-key
 
 ---
+# Optional only if using AWS EC2 Roles
 kind: Secret
 metadata:
   name: aws-secrets

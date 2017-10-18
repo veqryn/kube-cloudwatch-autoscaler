@@ -1,5 +1,6 @@
 #!/bin/bash
-# This script will scale the number of replicas of a given kubernetes deployment up or down,
+# This script will periodically scale the number of replicas
+# of a given kubernetes deployment up or down,
 # determined by the value of an aws cloudwatch metric.
 
 if [ "${DEBUG}" = true ]; then
