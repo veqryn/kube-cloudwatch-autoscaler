@@ -14,4 +14,4 @@ RUN set -eux; \
 COPY ./entrypoint.sh /usr/local/bin/
 
 # Command
-CMD ["/bin/bash"]
+CMD ["/usr/local/bin/entrypoint.sh"]
