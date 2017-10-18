@@ -44,7 +44,8 @@ KUBE_SCALE_UP_COUNT=1
 KUBE_URL="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_PORT_443_TCP_PORT}/${KUBE_ENDPOINT}"
 
 # Set last scaling event time to be far in the past, so initial comparisons work
-KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds" -d "-1 year")
+#KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds" -d "-1 year")
+KUBE_LAST_SCALING=$(date -u -I'seconds' -d @$(( $(date -u +%s) - 31536000 )))
 
 # Exit immediately on signal
 trap 'exit 0' SIGINT SIGTERM EXIT
@@ -63,7 +64,8 @@ do
     echo "Kube Replicas: ${KUBE_CURRENT_REPLICAS}"
 
     # Query aws cloudwatch metric
-    CW_VALUE=$(aws cloudwatch get-metric-statistics --namespace "${CW_NAMESPACE}" --metric-name "${CW_METRIC_NAME}" --dimensions "${CW_DIMENSIONS}" --start-time $(date --utc --iso-8601="seconds" -d "-${CW_PERIOD} seconds") --end-time $(date --utc --iso-8601='seconds') --statistics "${CW_STATISTICS}" --period "${CW_PERIOD}" | jq ".Datapoints[0].${CW_STATISTICS}")
+    #CW_VALUE=$(aws cloudwatch get-metric-statistics --namespace "${CW_NAMESPACE}" --metric-name "${CW_METRIC_NAME}" --dimensions "${CW_DIMENSIONS}" --start-time $(date --utc --iso-8601="seconds" -d "-${CW_PERIOD} seconds") --end-time $(date --utc --iso-8601='seconds') --statistics "${CW_STATISTICS}" --period "${CW_PERIOD}" | jq ".Datapoints[0].${CW_STATISTICS}")
+    CW_VALUE=$(aws cloudwatch get-metric-statistics --namespace "${CW_NAMESPACE}" --metric-name "${CW_METRIC_NAME}" --dimensions "${CW_DIMENSIONS}" --start-time $(date -u -I'seconds' -d @$(( $(date -u +%s) - ${CW_PERIOD} ))) --end-time $(date -u -I'seconds') --statistics "${CW_STATISTICS}" --period "${CW_PERIOD}" | jq ".Datapoints[0].${CW_STATISTICS}")
     echo "AWS CloudWatch Value: ${CW_VALUE}"
 
     # If cloudwatch returned no metrics then CW_VALUE will be null, so print an error
@@ -72,25 +74,28 @@ do
         continue
     fi
 
-    # TODO: error handling
     # If the metric value is <= the scale-down value, and current replica count is > min replicas, and the last time we scaled up or down was at least the cooldown period ago
-    if [[ "${CW_VALUE}" -le "${CW_SCALE_DOWN_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -gt "${KUBE_MIN_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date --utc --iso-8601="seconds" -d "-${KUBE_SCALE_DOWN_COOLDOWN} seconds") ]]; then
+    #if [[ "${CW_VALUE}" -le "${CW_SCALE_DOWN_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -gt "${KUBE_MIN_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date --utc --iso-8601="seconds" -d "-${KUBE_SCALE_DOWN_COOLDOWN} seconds") ]]; then
+    if [[ "${CW_VALUE}" -le "${CW_SCALE_DOWN_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -gt "${KUBE_MIN_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date -u -I'seconds' -d @$(( $(date -u +%s) - ${KUBE_SCALE_DOWN_COOLDOWN} ))) ]]; then
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} - ${KUBE_SCALE_DOWN_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} > ${KUBE_MIN_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MIN_REPLICAS} ))
         echo "Scaling down from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
         PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":"'${NEW_REPLICAS}'"}]'
         curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}"
-        KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds")
+        #KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds")
+        KUBE_LAST_SCALING=$(date -u -I'seconds')
     fi
 
     # If the metric value is >= the scale-up value, and current replica count is < max replicas, and the last time we scaled up or down was at least the cooldown period ago
-    if [[ "${CW_VALUE}" -ge "${CW_SCALE_UP_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -lt "${KUBE_MAX_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date --utc --iso-8601="seconds" -d "-${KUBE_SCALE_UP_COOLDOWN} seconds") ]]; then
+    #if [[ "${CW_VALUE}" -ge "${CW_SCALE_UP_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -lt "${KUBE_MAX_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date --utc --iso-8601="seconds" -d "-${KUBE_SCALE_UP_COOLDOWN} seconds") ]]; then
+    if [[ "${CW_VALUE}" -ge "${CW_SCALE_UP_VALUE}"  &&  "${KUBE_CURRENT_REPLICAS}" -lt "${KUBE_MAX_REPLICAS}"  &&  "${KUBE_LAST_SCALING}" < $(date -u -I'seconds' -d @$(( $(date -u +%s) - ${KUBE_SCALE_UP_COOLDOWN} ))) ]]; then
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} + ${KUBE_SCALE_UP_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} < ${KUBE_MAX_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MAX_REPLICAS} ))
         echo "Scaling up from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
         PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":"'${NEW_REPLICAS}'"}]'
         curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}"
-        KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds")
+        #KUBE_LAST_SCALING=$(date --utc --iso-8601="seconds")
+        KUBE_LAST_SCALING=$(date -u -I'seconds')
     fi
 
 done
