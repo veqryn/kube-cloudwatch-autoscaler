@@ -1,0 +1,75 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kube-cloudwatch-autoscaler
+  labels:
+    app: kube-cloudwatch-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kube-cloudwatch-autoscaler
+  template:
+    metadata:
+      labels:
+        app: kube-cloudwatch-autoscaler
+    spec:
+      containers:
+        - name: kube-cloudwatch-autoscaler
+          image: "veqryn/kube-cloudwatch-autoscaler:1.0"
+          env:
+            - name: KUBE_ENDPOINT
+              value: "apis/apps/v1beta1/namespaces/default/deployments/my-app-name/scale"
+            - name: KUBE_MIN_REPLICAS
+              value: "1"
+            - name: KUBE_MAX_REPLICAS
+              value: "100"
+            - name: KUBE_SCALE_DOWN_COUNT
+              value: "1"
+            - name: KUBE_SCALE_UP_COUNT
+              value: "1"
+            - name: KUBE_SCALE_DOWN_COOLDOWN
+              value: "120"
+            - name: KUBE_SCALE_UP_COOLDOWN
+              value: "300"
+            - name: CW_SCALE_DOWN_VALUE
+              value: "300"
+            - name: CW_SCALE_UP_VALUE
+              value: "900"
+            - name: CW_NAMESPACE
+              value: "AWS/SQS"
+            - name: CW_METRIC_NAME
+              value: "ApproximateAgeOfOldestMessage"
+            - name: CW_DIMENSIONS
+              value: "Name=QueueName,Value=my_sqs_queue_name"
+            - name: CW_STATISTICS
+              value: "Average"
+            - name: CW_PERIOD
+              value: "360"
+            - name: CW_POLL_PERIOD
+              value: "30"
+            - name: VERBOSE
+              value: "true"
+            - name: AWS_DEFAULT_REGION
+              value: "us-east-1"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: aws-access-key-id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-secrets
+                  key: aws-secret-access-key
+
+---
+kind: Secret
+metadata:
+  name: aws-secrets
+  labels:
+    app: aws-secrets
+type: Opaque
+data:
+  aws-access-key-id: "YXdzLWtleQ=="
+  aws-secret-access-key: "YXdzLXNlY3JldA=="
