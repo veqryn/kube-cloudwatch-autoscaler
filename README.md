@@ -7,7 +7,7 @@ An example would be using it to increase the number of pods when the age of the 
     * You may either use 'AWS EC2 Roles', or create a user with an access token. 
 2. Create the below deployment in your Kubernetes cluster, after changing the variables to suite your needs.
 
-### Kubernetes deployment yaml
+### Kubernetes deployment yaml (with default values for optional variables)
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -27,56 +27,62 @@ spec:
     spec:
       containers:
         - name: kube-cloudwatch-autoscaler
-          image: "veqryn/kube-cloudwatch-autoscaler:1.0"
+          image: "veqryn/kube-cloudwatch-autoscaler:1.1"
           env:
-            - name: KUBE_ENDPOINT # Required
+            - name: KUBE_ENDPOINT # Required, the app's api endpoint in kube (this example will cause us to scale a deployment named "my-app-name")
               value: "apis/apps/v1beta1/namespaces/default/deployments/my-app-name/scale"
             - name: KUBE_MIN_REPLICAS # Optional
               value: "1"
             - name: KUBE_MAX_REPLICAS # Optional
-              value: "100"
-            - name: KUBE_SCALE_DOWN_COUNT # Optional
+              value: "50"
+            - name: KUBE_SCALE_DOWN_COUNT # Optional, how many replicas to reduce by when scaling down
               value: "1"
-            - name: KUBE_SCALE_UP_COUNT # Optional
+            - name: KUBE_SCALE_UP_COUNT # Optional, how many replicas to increase by when scaling up
               value: "1"
-            - name: KUBE_SCALE_DOWN_COOLDOWN # Optional
-              value: "120"
-            - name: KUBE_SCALE_UP_COOLDOWN # Optional
+            - name: KUBE_SCALE_DOWN_COOLDOWN # Optional, cooldown in seconds after scaling down
+              value: "180"
+            - name: KUBE_SCALE_UP_COOLDOWN # Optional, cooldown in seconds after scaling up
               value: "300"
-            - name: CW_SCALE_DOWN_VALUE # Required
+            - name: CW_SCALE_DOWN_VALUE # Required, cloudwatch metric value that will trigger scaling down
               value: "300"
-            - name: CW_SCALE_UP_VALUE # Required
+            - name: CW_SCALE_UP_VALUE # Required, cloudwatch metric value that will trigger scaling up
               value: "900"
-            - name: CW_NAMESPACE # Required
+            - name: CW_NAMESPACE # Required (see https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html)
               value: "AWS/SQS"
             - name: CW_METRIC_NAME # Required
               value: "ApproximateAgeOfOldestMessage"
-            - name: CW_DIMENSIONS # Required
+            - name: CW_DIMENSIONS # Required (Separate multiple dimensions with spaces, such as: "Name=TargetGroup,Value=targetgroup/my-tg/abc Name=LoadBalancer,Value=app/my-elb/xyz")
               value: "Name=QueueName,Value=my_sqs_queue_name"
-              # Separate multiple dimensions with spaces, such as: "Name=TargetGroup,Value=targetgroup/my-tg/abc Name=LoadBalancer,Value=app/my-elb/xyz"
-            - name: CW_STATISTICS # Optional
+            - name: CW_STATISTICS # Optional, how to aggregate data if there are multiple within a period (Average, Sum, Minimum, Maximum, SampleCount, or pNN.NN)
               value: "Average"
-            - name: CW_PERIOD # Optional
+            - name: CW_PERIOD # Optional, the length of time in seconds to search for and aggregate datapoints (should be longer than how often cloudwatch is populated with new datapoints)
               value: "360"
-            - name: CW_POLL_PERIOD # Optional
+            - name: CW_POLL_PERIOD # Optional, how often to poll cloudwatch for new data, and possibly scale up or down
               value: "30"
-            - name: VERBOSE # Optional
-              value: "true"
-            - name: AWS_DEFAULT_REGION # Optional only if using AWS EC2 Roles
+            - name: VERBOSE # Optional, will log kube and cloudwatch statistics
+              value: "false"
+            - name: AWS_DEFAULT_REGION # Optional, Needed only if not using AWS EC2 Roles
               value: "us-east-1"
-            - name: AWS_ACCESS_KEY_ID # Optional only if using AWS EC2 Roles
+            - name: AWS_ACCESS_KEY_ID # Optional, Needed only if not using AWS EC2 Roles
               valueFrom:
                 secretKeyRef:
                   name: aws-secrets
                   key: aws-access-key-id
-            - name: AWS_SECRET_ACCESS_KEY # Optional only if using AWS EC2 Roles
+            - name: AWS_SECRET_ACCESS_KEY # Optional, Needed only if not using AWS EC2 Roles
               valueFrom:
                 secretKeyRef:
                   name: aws-secrets
                   key: aws-secret-access-key
+          resources:
+            requests:
+              memory: 24Mi
+              cpu: 10m
+            limits:
+              memory: 48Mi
+              cpu: 50m
 
 ---
-# Optional only if using AWS EC2 Roles
+# Optional, Needed only if not using AWS EC2 Roles
 kind: Secret
 metadata:
   name: aws-secrets
