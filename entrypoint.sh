@@ -101,7 +101,7 @@ do
         fi
         # Confirm response says correct number of replicas, instead of an error message
         SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
-        if [ ${SCALE_REPLICAS} == ${NEW_REPLICAS} ]; then
+        if [ ${SCALE_REPLICAS} != ${NEW_REPLICAS} ]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi
@@ -121,7 +121,7 @@ do
         fi
         # Confirm response says correct number of replicas, instead of an error message
         SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
-        if [ ${SCALE_REPLICAS} == ${NEW_REPLICAS} ]; then
+        if [ ${SCALE_REPLICAS} != ${NEW_REPLICAS} ]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi

@@ -2,6 +2,8 @@
 This is a Kubernetes deployment that will manage the autoscaling of one other Kubernetes deployment/replica/pod, periodically scaling the number of replicas based on any AWS CloudWatch metric (ex: SQS Queue Size or Max Age, ELB Response Time, etc).
 An example would be using it to increase the number of pods when the age of the oldest message on SQS gets too old, and decrease the number of pods when it stabilizes again.
 
+Docker image can be found on Docker Hub (https://hub.docker.com/r/veqryn/kube-cloudwatch-autoscaler/) and Docker Cloud (https://cloud.docker.com/swarm/veqryn/repository/docker/veqryn/kube-cloudwatch-autoscaler).
+
 ## How to use:
 1. Ensure this autoscaler will have the necessary AWS permissions to access CloudWatch.
     * You may either use 'AWS EC2 Roles', or create a user with an access token. 
