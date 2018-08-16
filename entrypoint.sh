@@ -93,9 +93,15 @@ do
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} - ${KUBE_SCALE_DOWN_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} > ${KUBE_MIN_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MIN_REPLICAS} ))
         printf '%s\n' "$(date -u -I'seconds') Scaling down from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
-        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":"'${NEW_REPLICAS}'"}]'
+        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'${NEW_REPLICAS}'}]'
         SCALE_OUTPUT=$(curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}")
         if [[ "${?}" -ne 0 ]]; then
+            printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
+            exit 1 # Kube will restart this pod
+        fi
+        # Confirm response says correct number of replicas, instead of an error message
+        SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
+        if [ ${SCALE_REPLICAS} == ${NEW_REPLICAS} ]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi
@@ -107,9 +113,15 @@ do
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} + ${KUBE_SCALE_UP_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} < ${KUBE_MAX_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MAX_REPLICAS} ))
         printf '%s\n' "$(date -u -I'seconds') Scaling up from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
-        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":"'${NEW_REPLICAS}'"}]'
+        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'${NEW_REPLICAS}'}]'
         SCALE_OUTPUT=$(curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}")
         if [[ "${?}" -ne 0 ]]; then
+            printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
+            exit 1 # Kube will restart this pod
+        fi
+        # Confirm response says correct number of replicas, instead of an error message
+        SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
+        if [ ${SCALE_REPLICAS} == ${NEW_REPLICAS} ]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi
