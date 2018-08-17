@@ -14,24 +14,24 @@ fi
 
 # Required and optional environment variables.
 # All time/durations must be in seconds, all values must be integers.
-KUBE_ENDPOINT=${KUBE_ENDPOINT:?"Required: KUBE_ENDPOINT must be equal to the Kube API scaling endpoint for the deployment, such as: 'apis/apps/v1beta1/namespaces/default/deployments/<MyAppName>/scale'"}
-KUBE_MIN_REPLICAS=${KUBE_MIN_REPLICAS:-1}
-KUBE_MAX_REPLICAS=${KUBE_MAX_REPLICAS:-50}
-KUBE_SCALE_DOWN_COUNT=${KUBE_SCALE_DOWN_COUNT:-1}
-KUBE_SCALE_UP_COUNT=${KUBE_SCALE_UP_COUNT:-1}
-KUBE_SCALE_DOWN_COOLDOWN=${KUBE_SCALE_DOWN_COOLDOWN:-180}
-KUBE_SCALE_UP_COOLDOWN=${KUBE_SCALE_UP_COOLDOWN:-300}
-CW_SCALE_DOWN_VALUE=${CW_SCALE_DOWN_VALUE:?"Required: CW_SCALE_DOWN_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling down the replicas, such as '300'"}
-CW_SCALE_UP_VALUE=${CW_SCALE_UP_VALUE:?"Required: CW_SCALE_UP_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling up the replicas, such as '900'"}
-CW_NAMESPACE=${CW_NAMESPACE:?"Required: CW_NAMESPACE must be set to the AWS CloudWatch Namespace, such as: 'AWS/SQS'"}
-CW_METRIC_NAME=${CW_METRIC_NAME:?"Required: CW_METRIC_NAME must be set to the AWS CloudWatch MetricName, such as: 'ApproximateAgeOfOldestMessage'"}
-CW_DIMENSIONS=${CW_DIMENSIONS:?"Required: CW_DIMENSIONS must be set to the AWS CloudWatch Dimensions, such as: 'Name=QueueName,Value=my_sqs_queue_name'"}
-CW_STATISTICS=${CW_STATISTICS:-"Average"}
-CW_PERIOD=${CW_PERIOD:-360}
-CW_POLL_PERIOD=${CW_POLL_PERIOD:-30}
+KUBE_ENDPOINT="${KUBE_ENDPOINT:?"Required: KUBE_ENDPOINT must be equal to the Kube API scaling endpoint for the deployment, such as: 'apis/apps/v1beta1/namespaces/default/deployments/<MyAppName>/scale'"}"
+KUBE_MIN_REPLICAS="${KUBE_MIN_REPLICAS:-1}"
+KUBE_MAX_REPLICAS="${KUBE_MAX_REPLICAS:-50}"
+KUBE_SCALE_DOWN_COUNT="${KUBE_SCALE_DOWN_COUNT:-1}"
+KUBE_SCALE_UP_COUNT="${KUBE_SCALE_UP_COUNT:-1}"
+KUBE_SCALE_DOWN_COOLDOWN="${KUBE_SCALE_DOWN_COOLDOWN:-180}"
+KUBE_SCALE_UP_COOLDOWN="${KUBE_SCALE_UP_COOLDOWN:-300}"
+CW_SCALE_DOWN_VALUE="${CW_SCALE_DOWN_VALUE:?"Required: CW_SCALE_DOWN_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling down the replicas, such as '300'"}"
+CW_SCALE_UP_VALUE="${CW_SCALE_UP_VALUE:?"Required: CW_SCALE_UP_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling up the replicas, such as '900'"}"
+CW_NAMESPACE="${CW_NAMESPACE:?"Required: CW_NAMESPACE must be set to the AWS CloudWatch Namespace, such as: 'AWS/SQS'"}"
+CW_METRIC_NAME="${CW_METRIC_NAME:?"Required: CW_METRIC_NAME must be set to the AWS CloudWatch MetricName, such as: 'ApproximateAgeOfOldestMessage'"}"
+CW_DIMENSIONS="${CW_DIMENSIONS:?"Required: CW_DIMENSIONS must be set to the AWS CloudWatch Dimensions, such as: 'Name=QueueName,Value=my_sqs_queue_name'"}"
+CW_STATISTICS="${CW_STATISTICS:-"Average"}"
+CW_PERIOD="${CW_PERIOD:-360}"
+CW_POLL_PERIOD="${CW_POLL_PERIOD:-30}"
 
 # There can be multiple CloudWatch Dimensions, so split into an array
-read -r -a CW_DIMENSIONS_ARRAY <<< ${CW_DIMENSIONS}
+read -r -a CW_DIMENSIONS_ARRAY <<< "${CW_DIMENSIONS}"
 
 # Create Kubernetes scaling url
 KUBE_URL="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_PORT_443_TCP_PORT}/${KUBE_ENDPOINT}"
@@ -49,7 +49,7 @@ trap 'exit 0' SIGINT SIGTERM EXIT
 while true
 do
     # Sleep poll period with wait on trapped signal
-    sleep "${CW_POLL_PERIOD}s" & wait $!
+    sleep "${CW_POLL_PERIOD}s" & wait "${!}"
 
     # Get kubernetes service endpoint token
     KUBE_TOKEN=$(</var/run/secrets/kubernetes.io/serviceaccount/token)
@@ -83,7 +83,7 @@ do
         continue
     fi
     # CloudWatch metrics can have decimals, but bash doesn't like them, so remove with printf
-    CW_VALUE=$(printf '%.0f' ${CW_VALUE})
+    CW_VALUE=$(printf '%.0f' "${CW_VALUE}")
     if [ "${VERBOSE}" = true ]; then
         printf '%s\n' "$(date -u -I'seconds') AWS CloudWatch Value: ${CW_VALUE}"
     fi
@@ -93,7 +93,7 @@ do
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} - ${KUBE_SCALE_DOWN_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} > ${KUBE_MIN_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MIN_REPLICAS} ))
         printf '%s\n' "$(date -u -I'seconds') Scaling down from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
-        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'${NEW_REPLICAS}'}]'
+        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'"${NEW_REPLICAS}"'}]'
         SCALE_OUTPUT=$(curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}")
         if [[ "${?}" -ne 0 ]]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
@@ -101,7 +101,7 @@ do
         fi
         # Confirm response says correct number of replicas, instead of an error message
         SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
-        if [ ${SCALE_REPLICAS} != ${NEW_REPLICAS} ]; then
+        if [[ "${SCALE_REPLICAS}" -ne "${NEW_REPLICAS}" ]]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi
@@ -113,7 +113,7 @@ do
         NEW_REPLICAS=$(( ${KUBE_CURRENT_REPLICAS} + ${KUBE_SCALE_UP_COUNT} ))
         NEW_REPLICAS=$(( ${NEW_REPLICAS} < ${KUBE_MAX_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MAX_REPLICAS} ))
         printf '%s\n' "$(date -u -I'seconds') Scaling up from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
-        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'${NEW_REPLICAS}'}]'
+        PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'"${NEW_REPLICAS}"'}]'
         SCALE_OUTPUT=$(curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}")
         if [[ "${?}" -ne 0 ]]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
@@ -121,7 +121,7 @@ do
         fi
         # Confirm response says correct number of replicas, instead of an error message
         SCALE_REPLICAS=$(printf '%s' "${SCALE_OUTPUT}" | jq '.spec.replicas')
-        if [ ${SCALE_REPLICAS} != ${NEW_REPLICAS} ]; then
+        if [[ "${SCALE_REPLICAS}" -ne "${NEW_REPLICAS}" ]]; then
             printf '%s\n' "$(date -u -I'seconds') Exiting: Unable to patch kubernetes deployment. Payload:${PAYLOAD} OUTPUT:${SCALE_OUTPUT}"
             exit 1 # Kube will restart this pod
         fi
