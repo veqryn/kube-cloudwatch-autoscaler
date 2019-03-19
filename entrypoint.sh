@@ -110,7 +110,7 @@ do
     NEW_REPLICAS=$(( ${NEW_REPLICAS} < ${KUBE_MAX_REPLICAS} ? ${NEW_REPLICAS} : ${KUBE_MAX_REPLICAS} ))
 
     # If the scale has changed
-    if [[ "${NEW_REPLICAS}" -ne "${KUBE_CURRENT_REPLICAS}"]]; then
+    if [[ "${NEW_REPLICAS}" -ne "${KUBE_CURRENT_REPLICAS}" ]]; then
         printf '%s\n' "$(date -u -I'seconds') Scaling from ${KUBE_CURRENT_REPLICAS} to ${NEW_REPLICAS}"
         PAYLOAD='[{"op":"replace","path":"/spec/replicas","value":'"${NEW_REPLICAS}"'}]'
         SCALE_OUTPUT=$(curl -sS --cacert "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt" -H "Authorization: Bearer ${KUBE_TOKEN}" -X PATCH -H 'Content-Type: application/json-patch+json' --data "${PAYLOAD}" "${KUBE_URL}")
