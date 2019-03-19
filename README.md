@@ -45,6 +45,8 @@ spec:
               value: "180"
             - name: KUBE_SCALE_UP_COOLDOWN # Optional, cooldown in seconds after scaling up
               value: "300"
+            - name: CW_SCALE_WITH_METRIC # Optional, use the metric value as the scale value
+              value: "false"
             - name: CW_SCALE_DOWN_VALUE # Required, cloudwatch metric value that will trigger scaling down
               value: "300"
             - name: CW_SCALE_UP_VALUE # Required, cloudwatch metric value that will trigger scaling up
