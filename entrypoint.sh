@@ -22,8 +22,10 @@ KUBE_SCALE_UP_COUNT="${KUBE_SCALE_UP_COUNT:-1}"
 KUBE_SCALE_DOWN_COOLDOWN="${KUBE_SCALE_DOWN_COOLDOWN:-180}"
 KUBE_SCALE_UP_COOLDOWN="${KUBE_SCALE_UP_COOLDOWN:-300}"
 CW_SCALE_WITH_METRIC="${CW_SCALE_WITH_METRIC:-false}"
-CW_SCALE_DOWN_VALUE="${CW_SCALE_DOWN_VALUE:?"Required: CW_SCALE_DOWN_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling down the replicas, such as '300'"}"
-CW_SCALE_UP_VALUE="${CW_SCALE_UP_VALUE:?"Required: CW_SCALE_UP_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling up the replicas, such as '900'"}"
+if [[ "${CW_SCALE_WITH_METRIC}" = false ]]; then
+    CW_SCALE_DOWN_VALUE="${CW_SCALE_DOWN_VALUE:?"Required: CW_SCALE_DOWN_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling down the replicas, such as '300'"}"
+    CW_SCALE_UP_VALUE="${CW_SCALE_UP_VALUE:?"Required: CW_SCALE_UP_VALUE must be set to the AWS CloudWatch metric value that will trigger scaling up the replicas, such as '900'"}"
+fi
 CW_NAMESPACE="${CW_NAMESPACE:?"Required: CW_NAMESPACE must be set to the AWS CloudWatch Namespace, such as: 'AWS/SQS'"}"
 CW_METRIC_NAME="${CW_METRIC_NAME:?"Required: CW_METRIC_NAME must be set to the AWS CloudWatch MetricName, such as: 'ApproximateAgeOfOldestMessage'"}"
 CW_DIMENSIONS="${CW_DIMENSIONS:?"Required: CW_DIMENSIONS must be set to the AWS CloudWatch Dimensions, such as: 'Name=QueueName,Value=my_sqs_queue_name'"}"
