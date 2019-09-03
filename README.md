@@ -45,9 +45,11 @@ spec:
               value: "180"
             - name: KUBE_SCALE_UP_COOLDOWN # Optional, cooldown in seconds after scaling up
               value: "300"
-            - name: CW_SCALE_DOWN_VALUE # Required, cloudwatch metric value that will trigger scaling down
+            - name: CW_SCALE_WITH_METRIC # Optional, use the metric value as the scale value
+              value: "false"
+            - name: CW_SCALE_DOWN_VALUE # Required if CW_SCALE_WITH_METRIC is false, cloudwatch metric value that will trigger scaling down
               value: "300"
-            - name: CW_SCALE_UP_VALUE # Required, cloudwatch metric value that will trigger scaling up
+            - name: CW_SCALE_UP_VALUE # Required if CW_SCALE_WITH_METRIC is false, cloudwatch metric value that will trigger scaling up
               value: "900"
             - name: CW_NAMESPACE # Required (see https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html)
               value: "AWS/SQS"
