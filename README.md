@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: kube-cloudwatch-autoscaler
-          image: "veqryn/kube-cloudwatch-autoscaler:1.1"
+          image: "veqryn/kube-cloudwatch-autoscaler:1.3"
           env:
             - name: KUBE_ENDPOINT # Required, the app's api endpoint in kube (this example will cause us to scale a deployment named "my-app-name")
               value: "apis/apps/v1beta1/namespaces/default/deployments/my-app-name/scale"
