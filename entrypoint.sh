@@ -26,12 +26,19 @@ CW_SCALE_UP_VALUE="${CW_SCALE_UP_VALUE:?"Required: CW_SCALE_UP_VALUE must be set
 CW_NAMESPACE="${CW_NAMESPACE:?"Required: CW_NAMESPACE must be set to the AWS CloudWatch Namespace, such as: 'AWS/SQS'"}"
 CW_METRIC_NAME="${CW_METRIC_NAME:?"Required: CW_METRIC_NAME must be set to the AWS CloudWatch MetricName, such as: 'ApproximateAgeOfOldestMessage'"}"
 CW_DIMENSIONS="${CW_DIMENSIONS:?"Required: CW_DIMENSIONS must be set to the AWS CloudWatch Dimensions, such as: 'Name=QueueName,Value=my_sqs_queue_name'"}"
+CW_DIMENSIONS_DELIMITER="${CW_DIMENSIONS_DELIMITER:-" "}"
 CW_STATISTICS="${CW_STATISTICS:-"Average"}"
 CW_PERIOD="${CW_PERIOD:-360}"
 CW_POLL_PERIOD="${CW_POLL_PERIOD:-30}"
 
-# There can be multiple CloudWatch Dimensions, so split into an array
+# There can be multiple CloudWatch Dimensions, so split into an array.
+# Set the delimiter, then unset when done. For whatever reason, this was not working as a one-liner.
+export IFS=${CW_DIMENSIONS_DELIMITER}
 read -r -a CW_DIMENSIONS_ARRAY <<< "${CW_DIMENSIONS}"
+unset IFS
+if [ "${DEBUG}" = true ]; then
+    for e in "${CW_DIMENSIONS_ARRAY[@]}" ; do echo "DIMENSION: ${e}" ; done
+fi
 
 # Create Kubernetes scaling url
 KUBE_URL="https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_PORT_443_TCP_PORT}/${KUBE_ENDPOINT}"

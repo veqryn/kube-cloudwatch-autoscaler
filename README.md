@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: kube-cloudwatch-autoscaler
-          image: "veqryn/kube-cloudwatch-autoscaler:1.3"
+          image: "veqryn/kube-cloudwatch-autoscaler:1.4"
           env:
             - name: KUBE_ENDPOINT # Required, the app's api endpoint in kube (this example will cause us to scale a deployment named "my-app-name")
               value: "apis/apps/v1beta1/namespaces/default/deployments/my-app-name/scale"
@@ -55,6 +55,8 @@ spec:
               value: "ApproximateAgeOfOldestMessage"
             - name: CW_DIMENSIONS # Required (Separate multiple dimensions with spaces, such as: "Name=TargetGroup,Value=targetgroup/my-tg/abc Name=LoadBalancer,Value=app/my-elb/xyz")
               value: "Name=QueueName,Value=my_sqs_queue_name"
+            - name: CW_DIMENSIONS_DELIMITER # Optional, sets the delimiter for multiple CW_DIMENSIONS. Defaults to a space.
+              value: " "
             - name: CW_STATISTICS # Optional, how to aggregate data if there are multiple within a period (Average, Sum, Minimum, Maximum, SampleCount, or pNN.NN)
               value: "Average"
             - name: CW_PERIOD # Optional, the length of time in seconds to search for and aggregate datapoints (should be longer than how often cloudwatch is populated with new datapoints)
