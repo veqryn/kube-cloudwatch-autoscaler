@@ -63,9 +63,7 @@ spec:
               value: "360"
             - name: CW_POLL_PERIOD # Optional, how often to poll cloudwatch for new data, and possibly scale up or down
               value: "30"
-            - name: VERBOSE # Optional, will log kube and cloudwatch statistics
-              value: "false"
-            - name: LOG_LEVEL # Optional, defaults to "INFO". Allowable values: "DEBUG", "INFO", "ERROR", "OFF"
+            - name: LOG_LEVEL # Optional, defaults to "INFO". Allowable values: "DEBUG" (will log kube and cloudwatch statistics), "INFO" (will log scaling activity), "ERROR" (will log errors only), "OFF" (nothing)
               value: "INFO"
             - name: AWS_DEFAULT_REGION # Optional, Needed only if not using AWS EC2 Roles
               value: "us-east-1"
