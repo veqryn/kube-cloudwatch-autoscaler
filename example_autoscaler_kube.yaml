@@ -52,6 +52,8 @@ spec:
               value: "30"
             - name: VERBOSE # Optional, will log kube and cloudwatch statistics
               value: "false"
+            - name: LOG_LEVEL # Optional, defaults to "INFO". Allowable values: "DEBUG", "INFO", "ERROR", "OFF"
+              value: "INFO"
             - name: AWS_DEFAULT_REGION # Optional, Needed only if not using AWS EC2 Roles
               value: "us-east-1"
             - name: AWS_ACCESS_KEY_ID # Optional, Needed only if not using AWS EC2 Roles
