@@ -54,7 +54,7 @@ log_info() {
 log_debug() {
   # Maintain backwards compat for VERBOSE flag
   if [[ "${LOG_LEVEL}" == "DEBUG" || "${VERBOSE}" == true ]]; then
-    echo -e "\033[1;33m$(date -u -I'seconds') DEBUG:\033[0m ${1}"
+    echo "$(date -u -I'seconds') DEBUG: ${1}"
   fi
 }
 
