@@ -77,7 +77,7 @@ KUBE_LAST_SCALING=$(date -u -I'seconds' -d @$(( $(date -u +%s) - 31536000 )))
 log_info "Starting autoscaler..."
 
 # Exit immediately on signal
-trap 'exit 0' SIGINT SIGTERM EXIT
+trap 'exit $?' SIGINT SIGTERM EXIT
 
 # Loop forever
 while true
