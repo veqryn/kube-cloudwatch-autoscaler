@@ -32,6 +32,12 @@ CW_PERIOD="${CW_PERIOD:-360}"
 CW_POLL_PERIOD="${CW_POLL_PERIOD:-30}"
 LOG_LEVEL="${LOG_LEVEL:-"INFO"}" # OFF,ERROR,INFO,DEBUG
 
+# Validate LOG_LEVEL
+if [[ "${LOG_LEVEL}" != "OFF" && "${LOG_LEVEL}" != "ERROR" && "${LOG_LEVEL}" != "INFO" && "${LOG_LEVEL}" != "DEBUG" ]]; then
+    echo "LOG_LEVEL must be one of: OFF,ERROR,INFO,DEBUG"
+    exit 1
+fi
+
 # Logging functions, based on LOG_LEVEL environment variable
 log_error() {
   if [[ "${LOG_LEVEL}" == "ERROR" || "${LOG_LEVEL}" == "INFO" || "${LOG_LEVEL}" == "DEBUG" ]]; then
