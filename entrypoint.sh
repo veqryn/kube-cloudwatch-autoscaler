@@ -52,8 +52,7 @@ log_info() {
 }
 
 log_debug() {
-  # Maintain backwards compat for VERBOSE flag
-  if [[ "${LOG_LEVEL}" == "DEBUG" || "${VERBOSE}" == true ]]; then
+  if [[ "${LOG_LEVEL}" == "DEBUG" ]]; then
     echo "$(date -u -I'seconds') DEBUG: ${1}"
   fi
 }
