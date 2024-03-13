@@ -41,13 +41,13 @@ fi
 # Logging functions, based on LOG_LEVEL environment variable
 log_error() {
   if [[ "${LOG_LEVEL}" == "ERROR" || "${LOG_LEVEL}" == "INFO" || "${LOG_LEVEL}" == "DEBUG" ]]; then
-    echo -e "\033[1;31m$(date -u -I'seconds') ERROR:\033[0m ${1}"
+    echo "$(date -u -I'seconds') ERROR: ${1}"
   fi
 }
 
 log_info() {
   if [[ "${LOG_LEVEL}" == "INFO" || "${LOG_LEVEL}" == "DEBUG" ]]; then
-    echo -e "\033[1;32m$(date -u -I'seconds') INFO:\033[0m ${1}"
+    echo "$(date -u -I'seconds') INFO: ${1}"
   fi
 }
 
